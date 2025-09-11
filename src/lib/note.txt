@@ -1,0 +1,8 @@
+// DApproveModule.ts
+import { getDashboardConnection } from "@/lib/db";
+
+// route.ts
+import { getDApproveData } from "@/lib/modules/DApproveModule";
+
+// SSR page
+import { getDApproveData } from "@/lib/modules/DApproveModule";
