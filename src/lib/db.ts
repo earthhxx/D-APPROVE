@@ -19,7 +19,8 @@ export const getDashboardConnection = async () => {
   pool_NewFCXT = await new sql.ConnectionPool({
     user: requiredEnv('MSSQL_USER'),
     password: requiredEnv('MSSQL_PASSWORD'),
-    server: 'localhost',
+    server: requiredEnv('MSSQL_HOST'),
+    port: parseInt(requiredEnv('MSSQL_PORT')),
     database: requiredEnv('MSSQL_DATABASE'),
     options: {
       encrypt: false,
@@ -38,6 +39,7 @@ export const getDemo1Connection = async () => {
     user: requiredEnv('MSSQL_USER'),
     password: requiredEnv('MSSQL_PASSWORD'),
     server: 'localhost',
+    port: 5000,              
     database: requiredEnv('MSSQL_DATABASE'),
     options: {
       encrypt: false,
