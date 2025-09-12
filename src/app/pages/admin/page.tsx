@@ -85,7 +85,7 @@ export default function AdminAccessPage() {
 
 
   return (
-    <div className="font-mono text-white bg-black pt-20">
+    <div className="font-mono text-white bg-black pt-20 h-screen">
       <div className="flex flex-row items-center gap-3 mb-4 ">
         <span className="font-bold ps-4">Select Function :</span>
         <div ref={dropdownRef} tabIndex={0} onKeyDown={handleKey} className="relative">
