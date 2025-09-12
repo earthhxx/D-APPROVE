@@ -14,7 +14,7 @@ export interface ApproveQuery {
 
 export interface ApproveData {
   totalAll: number;
-  totals: Record<string, number>;
+  totals: Record<string, number>; // เพิ่มตรงนี้
   data: any[];
   offset: number;
   limit: number;
@@ -31,16 +31,9 @@ export async function getDApproveData({
   endDate = null,
 }: ApproveQuery): Promise<ApproveData> {
   const pool = await getDashboardConnection();
-
+  // console.log("startDate", startDate, endDate);
   console.log("api in", offset, limit, search, statusType, formaccess, FormDep);
-
-  const validTabs = ["Check_TAB", "Approve_TAB", "All_TAB"];
-  if (!validTabs.includes(statusType)) {
-    console.log("Invalid statusType:", statusType);
-    return { totalAll: 0, totals: {}, data: [], offset, limit };
-  }
-
-  // 1. ดึง mapping table สำหรับ formaccess
+  // ดึง mapping ของ table
   const tablesResult = await pool.request().query(`
     SELECT table_name, db_table_name
     FROM D_Approve
@@ -50,14 +43,19 @@ export async function getDApproveData({
   const tableMap: Record<string, string> = {};
   tablesResult.recordset.forEach(row => (tableMap[row.table_name] = row.db_table_name));
 
-  // 2. สร้าง queries โดยใช้ทั้ง formaccess + FormDep
+  // console.log("Table Map:", tableMap); // ✅ log table mapping
+
+  const validTabs = ["Check_TAB", "Approve_TAB", "All_TAB"];
+  if (!validTabs.includes(statusType)) {
+    console.log("Invalid statusType:", statusType); // ✅ log statusType ไม่ถูกต้อง
+    return { totalAll: 0, totals: {}, data: [], offset, limit };
+  }
+  // console.log(statusType)
+console.log('form',formaccess)
+
   const queries = formaccess
     .filter(t => tableMap[t])
     .map(t => {
-      // clean table name ลบ [] ครอบ หรือ escape ให้ SQL Server ถูกต้อง
-      const tableName = tableMap[t].replace(/\[|\]/g, "");
-
-      // ถ้ามี FormDep[t] ใช้ depList นั้น
       const depList = FormDep[t]?.length
         ? FormDep[t].map(d => `'${d}'`).join(",")
         : "''";
@@ -72,52 +70,59 @@ export async function getDApproveData({
       else if (statusType === "All_TAB")
         whereClause += ` AND StatusApprove IS NOT NULL AND StatusApprove != N'ไม่อนุมัติ'`;
 
-      // Date filters
-      if (statusType === "Check_TAB") {
-        if (startDate && endDate) whereClause += ` AND DateRequest BETWEEN @startDate AND @endDate`;
-        else if (startDate) whereClause += ` AND DateRequest >= @startDate`;
-        else if (endDate) whereClause += ` AND DateRequest <= @endDate`;
-      } else if (statusType === "Approve_TAB") {
-        if (startDate && endDate) whereClause += ` AND DateCheck BETWEEN @startDate AND @endDate`;
-        else if (startDate) whereClause += ` AND DateCheck >= @startDate`;
-        else if (endDate) whereClause += ` AND DateCheck <= @endDate`;
-      } else if (statusType === "All_TAB") {
-        if (startDate && endDate) whereClause += ` AND DateApprove BETWEEN @startDate AND @endDate`;
-        else if (startDate) whereClause += ` AND DateApprove >= @startDate`;
-        else if (endDate) whereClause += ` AND DateApprove <= @endDate`;
+
+      // DateRequest filter
+      if (startDate && endDate && statusType === "Check_TAB") {
+        whereClause += ` AND DateRequest BETWEEN @startDate AND @endDate`;
+      } else if (startDate && statusType === "Check_TAB") {
+        whereClause += ` AND DateRequest >= @startDate`;
+      } else if (endDate && statusType === "Check_TAB") {
+        whereClause += ` AND DateRequest <= @endDate`;
+      }
+
+      // DateCheck filter
+      if (startDate && endDate && statusType === "Approve_TAB") {
+        whereClause += ` AND DateCheck BETWEEN @startDate AND @endDate`;
+      } else if (startDate && statusType === "Approve_TAB") {
+        whereClause += ` AND DateCheck >= @startDate`;
+      } else if (endDate && statusType === "Approve_TAB") {
+        whereClause += ` AND DateCheck <= @endDate`;
+      }
+
+      // DateApprove filter
+      if (startDate && endDate && statusType === "All_TAB") {
+        whereClause += ` AND DateApprove BETWEEN @startDate AND @endDate`;
+      } else if (startDate && statusType === "All_TAB") {
+        whereClause += ` AND DateApprove >= @startDate`;
+      } else if (endDate && statusType === "All_TAB") {
+        whereClause += ` AND DateApprove <= @endDate`;
       }
 
       return `
-        SELECT id, FormID, FormThai, Dep, [Date] AS date,
-               DateRequest, StatusCheck, StatusApprove,
-               DateApprove, DateCheck, '${t}' AS source
-        FROM ${tableName} 
-        WHERE Dep IN (${depList}) AND ${whereClause}
-      `;
+      SELECT id, FormID, FormThai, Dep, [Date] AS date,
+             NameRequest,
+             DateRequest, StatusCheck, StatusApprove,
+             DateApprove, DateCheck, '${t}' AS source
+      FROM ${tableMap[t]}
+      WHERE Dep IN (${depList}) AND ${whereClause}
+    `;
     });
+  // log("Generated Queries:", queries); // ✅ log generated queries
 
-  if (!queries.length) {
-    return { totalAll: 0, totals: {}, data: [], offset, limit };
-  }
-
-  // 3. กำหนด Orderby ตาม statusType
-  let Orderby = "date DESC";
-  if (statusType === "Check_TAB") Orderby = "DateRequest ASC, date DESC";
+  let Orderby = "date DESC"; // ค่าเริ่มต้น
+  if (statusType === "Check_TAB") Orderby = "DateRequest DESC, date DESC";
   else if (statusType === "Approve_TAB") Orderby = "DateCheck DESC, date DESC";
-  else if (statusType === "All_TAB") Orderby = "DateApprove ASC, date DESC";
+  else if (statusType === "All_TAB") Orderby = "DateApprove DESC, date DESC";
 
-  // 4. สร้าง finalQuery
-  let finalQuery = `
-    SELECT *, COUNT(*) OVER() AS totalCount
-    FROM (
-      ${queries.join(" UNION ALL ")}
-    ) AS unioned
-    ORDER BY ${Orderby}
-  `;
-
-  if (limit > 0) {
-    finalQuery += ` OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY`;
-  }
+  const finalQuery = `
+                    SELECT *, COUNT(*) OVER() AS totalCount
+                    FROM (
+                      ${queries.join(" UNION ALL ")}
+                    ) AS unioned
+                    ORDER BY ${Orderby}
+                    OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
+                  `;
+  // console.log("Final Query:", finalQuery); // ✅ log final query
 
   const request = pool
     .request()
@@ -130,14 +135,22 @@ export async function getDApproveData({
 
   const dataResult = await request.query(finalQuery);
 
+
+  // console.log("Data Result:", dataResult.recordset); // ✅ log raw data result
+
   const data = dataResult.recordset;
+
   const totalAll = data.length > 0 ? Number(data[0].totalCount) : 0;
 
   const totals: Record<string, number> = {};
   data.forEach(d => {
     totals[d.source] = (totals[d.source] || 0) + 1;
   });
+
   data.forEach(d => delete d.totalCount);
+
+  // console.log("Totals per table:", totals); // ✅ log totals per table
+  // console.log("Total All:", totalAll); // ✅ log totalAll
 
   return { totalAll, totals, data, offset, limit };
 }

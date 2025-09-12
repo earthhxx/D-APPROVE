@@ -400,11 +400,11 @@ export default function DApproveTable({ user, initialData, AmountData, formOptio
                                 {dataAmount.ApproveNull}
                             </div>
                         )}
-                        {t === "All_TAB" && dataAmount.somethingNull > 0 && (
+                        {/* {t === "All_TAB" && dataAmount.somethingNull > 0 && (
                             <div className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500 text-xs font-bold text-white shadow-md">
                                 {dataAmount.somethingNull}
                             </div>
-                        )}
+                        )} */}
                     </button>
                 ))}
             </div>

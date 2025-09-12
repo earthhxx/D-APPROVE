@@ -42,9 +42,6 @@ export default function Sidebar() {
 
   if (!mounted) return null;
 
-  console.log("user", user);
-  console.log("permission:", permission);
-
   return (
     <>
       {!open && user && (
@@ -102,7 +99,7 @@ export default function Sidebar() {
                   หน้าหลัก
                 </Link>
 
-                {roles?.includes("Admin") && (
+                {roles?.includes("admin") && (
                   <Link
                     href="/pages/admin"
                     onClick={() => setOpen(false)}
@@ -118,7 +115,7 @@ export default function Sidebar() {
                     onClick={() => setOpen(false)}
                     className="hover:bg-red-700 bg-red-700/20 p-3 rounded font-medium text-red-400 text-center"
                   >
-                    ระบบ ยืนยันเอกสาร
+                    ระบบอนุมัติอิเล็กทรอนิกส์
                   </Link>
                 )}
               </nav>
