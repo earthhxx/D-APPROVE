@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
             .input("PermissionID", PermissionID)
             .query(`
                 SELECT 1 
-                FROM [DASHBOARD].[dbo].[RolePermissions]
+                FROM [mydb].[dbo].[RolePermissions]
                 WHERE RoleID = @RoleID AND PermissionID = @PermissionID
             `);
 
@@ -37,14 +37,14 @@ export async function POST(req: NextRequest) {
             .input("RoleID", RoleID)
             .input("PermissionID", PermissionID)
             .query(`
-                INSERT INTO [DASHBOARD].[dbo].[RolePermissions] (RoleID, PermissionID)
+                INSERT INTO [mydb].[dbo].[RolePermissions] (RoleID, PermissionID)
                 VALUES (@RoleID, @PermissionID)
             `);
 
         // ส่งข้อมูลทั้งหมดกลับ
         const result = await pool.request().query(`
             SELECT RoleID, PermissionID
-            FROM [DASHBOARD].[dbo].[RolePermissions]
+            FROM [mydb].[dbo].[RolePermissions]
         `);
 
         return NextResponse.json(result.recordset);

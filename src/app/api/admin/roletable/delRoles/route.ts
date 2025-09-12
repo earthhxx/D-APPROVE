@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     const delResult = await pool.request()
       .input("RoleID", RoleID)
       .query(`
-        DELETE FROM [DASHBOARD].[dbo].[Roles] 
+        DELETE FROM [mydb].[dbo].[Roles] 
         WHERE RoleID = @RoleID
       `);
 

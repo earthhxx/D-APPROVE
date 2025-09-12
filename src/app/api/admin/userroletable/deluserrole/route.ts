@@ -20,13 +20,13 @@ export async function POST(req: NextRequest) {
             .input("UserID", UserID)
             .input("RoleID", RoleID)
             .query(`
-                DELETE FROM [DASHBOARD].[dbo].[UserRoles]
+                DELETE FROM [mydb].[dbo].[UserRoles]
                 WHERE UserID = @UserID AND RoleID = @RoleID
             `);
 
         // ส่งกลับรายการ UserRoles ทั้งหมด
         const result = await pool.request().query(`
-            SELECT UserID, RoleID FROM [DASHBOARD].[dbo].[UserRoles]
+            SELECT UserID, RoleID FROM [mydb].[dbo].[UserRoles]
         `);
 
         return NextResponse.json(result.recordset);

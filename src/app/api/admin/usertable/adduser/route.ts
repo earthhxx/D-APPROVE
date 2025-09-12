@@ -19,14 +19,14 @@ export async function POST(req: NextRequest) {
             .input("Department", Department)
             .input("Pass", Pass)
             .query(`
-                INSERT INTO [DASHBOARD].[dbo].[tb_im_employee] (User_Id, Name, Department, Pass, CreateDate)
+                INSERT INTO [dbo].[tb_im_employee] (User_Id, Name, Department, Pass, CreateDate)
                 VALUES (@User_Id, @Name, @Department, @Pass, GETDATE())
             `);
 
         // RETURN ทั้งหมด
         const result = await pool.request().query(`
             SELECT [id],[User_Id],[Pass],[Name],[Age],[Sex],[Tel],[Department],[Process],[Image],[StartDate],[Status],[CreateDate]
-            FROM [DASHBOARD].[dbo].[tb_im_employee]
+            FROM [dbo].[tb_im_employee]
         `);
 
         return NextResponse.json(result.recordset);

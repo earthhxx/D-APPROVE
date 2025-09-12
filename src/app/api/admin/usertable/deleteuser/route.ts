@@ -16,14 +16,14 @@ export async function POST(req: NextRequest) {
         await pool.request()
             .input("User_Id", User_Id)
             .query(`
-                DELETE FROM [DASHBOARD].[dbo].[tb_im_employee]
+                DELETE FROM [mydb].[dbo].[tb_im_employee]
                 WHERE User_Id=@User_Id
             `);
 
         // SELECT ข้อมูลทั้งหมดส่งกลับ
         const result = await pool.request().query(`
             SELECT [id],[User_Id],[Pass],[Name],[Age],[Sex],[Tel],[Department],[Process],[Image],[StartDate],[Status],[CreateDate]
-            FROM [DASHBOARD].[dbo].[tb_im_employee]
+            FROM [dbo].[tb_im_employee]
         `);
 
         return NextResponse.json(result.recordset);

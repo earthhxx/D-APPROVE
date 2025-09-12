@@ -16,12 +16,12 @@ export async function POST(req: NextRequest) {
       .input("UserID", UserID)
       .input("RoleID", RoleID)
       .query(`
-        INSERT INTO [DASHBOARD].[dbo].[UserRoles] (UserID, RoleID)
+        INSERT INTO [mydb].[dbo].[UserRoles] (UserID, RoleID)
         VALUES (@UserID, @RoleID)
       `);
 
     const result = await pool.request().query(`
-      SELECT UserID, RoleID FROM [DASHBOARD].[dbo].[UserRoles]
+      SELECT UserID, RoleID FROM [dbo].[UserRoles]
     `);
 
     return NextResponse.json(result.recordset);

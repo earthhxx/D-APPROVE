@@ -19,7 +19,6 @@ export default function FilterUser() {
   const [searchRole, setSearchRole] = useState("");
   const [searchPermission, setSearchPermission] = useState("");
 
-  // 2) ดึงข้อมูลโดยพึ่ง cookie (middleware จะตรวจให้) — ไม่ต้องแนบ Authorization header
   useEffect(() => {
     const ac = new AbortController();
 
@@ -30,10 +29,8 @@ export default function FilterUser() {
 
         const res = await fetch("/api/admin/checkuser", {
           method: "GET",
-          credentials: "include", // สำคัญ: ให้ส่ง cookie แนบไปด้วย
-          headers: {
-            "Accept": "application/json",
-          },
+          credentials: "include",
+          headers: { Accept: "application/json" },
           signal: ac.signal,
         });
 
@@ -58,10 +55,7 @@ export default function FilterUser() {
     return () => ac.abort();
   }, []);
 
-  if (loading) return <div className="p-4 text-white">Loading users...</div>;
-  if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
-
-  // 3) Helper: escape ตัวอักษรพิเศษใน regex
+  // Helper: escape ตัวอักษรพิเศษใน regex
   const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
   const highlightText = (text: string, search: string) => {
@@ -77,7 +71,7 @@ export default function FilterUser() {
     );
   };
 
-  // 4) ป้องกัน undefined บางฟิลด์ + ใช้ useMemo ลดคำนวณซ้ำ
+  // Filtered users
   const filteredUsers = useMemo(() => {
     const qId = searchUserID.trim();
     const qName = searchName.trim().toLowerCase();
@@ -99,7 +93,7 @@ export default function FilterUser() {
     <div className="bg-black min-h-screen text-white font-mono p-4">
       <h1 className="text-2xl font-bold mb-4">Admin - Check Users Access</h1>
 
-      {/* Search bar — ทำ sticky จริง */}
+      {/* Search bar */}
       <div className="sticky top-0 bg-black z-20 p-2 mb-4 border-b border-white flex flex-wrap gap-2">
         <input
           type="text"
@@ -131,43 +125,50 @@ export default function FilterUser() {
         />
       </div>
 
-      <div className="overflow-x-auto max-h-[65vh] border border-white">
-        <table className="min-w-full border-collapse">
-          <thead className="sticky top-0 bg-gray-900 z-10">
-            <tr>
-              <th className="p-2 border border-white text-left">User ID</th>
-              <th className="p-2 border border-white text-left">Full Name</th>
-              <th className="p-2 border border-white text-left">Roles</th>
-              <th className="p-2 border border-white text-left">Permissions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.map((u) => (
-              <tr key={u.userId} className="hover:bg-gray-700">
-                <td className="p-2 border border-white">
-                  {highlightText(String(u.userId), searchUserID)}
-                </td>
-                <td className="p-2 border border-white">
-                  {highlightText(u.fullName, searchName)}
-                </td>
-                <td className="p-2 border border-white">
-                  {highlightText((u.roles ?? []).join(", "), searchRole)}
-                </td>
-                <td className="p-2 border border-white">
-                  {highlightText((u.permissions ?? []).join(", "), searchPermission)}
-                </td>
-              </tr>
-            ))}
-            {filteredUsers.length === 0 && (
+      {/* Status messages */}
+      {loading && <div className="p-4 text-white">Loading users...</div>}
+      {error && <div className="p-4 text-red-500">Error: {error}</div>}
+
+      {/* Users table */}
+      {!loading && !error && (
+        <div className="overflow-x-auto max-h-[65vh] border border-white">
+          <table className="min-w-full border-collapse">
+            <thead className="sticky top-0 bg-gray-900 z-10">
               <tr>
-                <td colSpan={4} className="p-2 border border-white text-center text-gray-400">
-                  No users found
-                </td>
+                <th className="p-2 border border-white text-left">User ID</th>
+                <th className="p-2 border border-white text-left">Full Name</th>
+                <th className="p-2 border border-white text-left">Roles</th>
+                <th className="p-2 border border-white text-left">Permissions</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {filteredUsers.map((u) => (
+                <tr key={u.userId} className="hover:bg-gray-700">
+                  <td className="p-2 border border-white">
+                    {highlightText(String(u.userId), searchUserID)}
+                  </td>
+                  <td className="p-2 border border-white">
+                    {highlightText(u.fullName, searchName)}
+                  </td>
+                  <td className="p-2 border border-white">
+                    {highlightText((u.roles ?? []).join(", "), searchRole)}
+                  </td>
+                  <td className="p-2 border border-white">
+                    {highlightText((u.permissions ?? []).join(", "), searchPermission)}
+                  </td>
+                </tr>
+              ))}
+              {filteredUsers.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="p-2 border border-white text-center text-gray-400">
+                    No users found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

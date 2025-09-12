@@ -13,14 +13,14 @@ export async function POST(req: NextRequest) {
       .input("PermissionName", body.PermissionName)
       .input("Description", body.Description)
       .query(`
-        INSERT INTO [DASHBOARD].[dbo].[Permissions] (PermissionName, Description)
+        INSERT INTO [mydb].[dbo].[Permissions] (PermissionName, Description)
         VALUES (@PermissionName, @Description);
       `);
 
     // ดึงข้อมูลทั้งหมดหลัง insert
     const allPermissions = await pool.request().query(`
       SELECT PermissionID, PermissionName, Description
-      FROM [DASHBOARD].[dbo].[Permissions]
+      FROM [mydb].[dbo].[Permissions]
     `);
 
     return NextResponse.json(allPermissions.recordset);

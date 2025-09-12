@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
             .input("Department", Department)
             .input("Pass", Pass)
             .query(`
-                UPDATE [DASHBOARD].[dbo].[tb_im_employee]
+                UPDATE [mydb].[dbo].[tb_im_employee]
                 SET Name=@Name, Department=@Department, Pass=@Pass
                 WHERE User_Id=@User_Id
             `);
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
         // SELECT ข้อมูลทั้งหมดส่งกลับ
         const result = await pool.request().query(`
             SELECT [id],[User_Id],[Pass],[Name],[Age],[Sex],[Tel],[Department],[Process],[Image],[StartDate],[Status],[CreateDate]
-            FROM [DASHBOARD].[dbo].[tb_im_employee]
+            FROM [dbo].[tb_im_employee]
         `);
 
         return NextResponse.json(result.recordset);

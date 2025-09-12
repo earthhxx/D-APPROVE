@@ -19,12 +19,12 @@ export async function POST(req: NextRequest) {
             .input("RoleID", RoleID)
             .input("PermissionID", PermissionID)
             .query(`
-                DELETE FROM [DASHBOARD].[dbo].[RolePermissions]
+                DELETE FROM [mydb].[dbo].[RolePermissions]
                 WHERE RoleID = @RoleID AND PermissionID = @PermissionID
             `);
 
         const result = await pool.request().query(`
-            SELECT RoleID, PermissionID FROM [DASHBOARD].[dbo].[RolePermissions]
+            SELECT RoleID, PermissionID FROM [mydb].[dbo].[RolePermissions]
         `);
 
         return NextResponse.json(result.recordset);

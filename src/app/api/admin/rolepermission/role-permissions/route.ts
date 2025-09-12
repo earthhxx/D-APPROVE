@@ -8,7 +8,7 @@ export async function GET() {
 
         const Result = await pool.request().query(`
             SELECT [RoleID],[PermissionID] 
-            FROM [DASHBOARD].[dbo].[RolePermissions]
+            FROM [mydb].[dbo].[RolePermissions]
             `);
 
         if (Result.recordset.length === 0) {

@@ -8,7 +8,7 @@ export async function GET() {
 
         const Result = await pool.request().query(`
             SELECT [id],[User_Id],[Pass],[Name],[Age],[Sex],[Tel],[Department],[Process],[Image],[StartDate],[Status],[CreateDate]
-            FROM [DASHBOARD].[dbo].[tb_im_employee]
+            FROM [dbo].[tb_im_employee]
             `);
 
         if (Result.recordset.length === 0) {
