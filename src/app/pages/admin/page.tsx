@@ -20,7 +20,7 @@ type ComponentType =
 export default function AdminAccessPage() {
   const { user } = useAuth();
   const roles = user?.roles ?? [];
-  const isAdmin = roles.includes("admin"); // ถ้าหน้านี้ "เฉพาะแอดมินเข้าได้" ให้กลับเงื่อนไขด้านล่าง
+  const isAdmin = roles.includes("Admin"); // ถ้าหน้านี้ "เฉพาะแอดมินเข้าได้" ให้กลับเงื่อนไขด้านล่าง
 
   // NOTE: ถ้าหน้านี้ "ไม่ให้แอดมินเข้า" ใช้แบบนี้ (ตามโค้ดเดิม)
   if (!user) {
