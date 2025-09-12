@@ -1,4 +1,3 @@
-// src/app/pages/Userlogin/D-APPROVE/page.tsx
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import DApproveTable from "./components/D_approvetable";
@@ -19,6 +18,12 @@ interface Option {
   all: FormDepMap;
 }
 
+interface AmountData {
+  ApproveNull: number;
+  CheckNull: number;
+  somethingNull: number;
+}
+
 export default async function UserLoginPage() {
   const cookieStore = await cookies();
   const token = cookieStore.get("auth_token")?.value;
@@ -30,7 +35,7 @@ export default async function UserLoginPage() {
       if (typeof decoded === "object" && decoded !== null) {
         user = decoded as UserPayload;
       }
-    } catch { }
+    } catch {}
   }
 
   if (!user || !user.permissions?.includes("D_Approve")) {
@@ -41,22 +46,20 @@ export default async function UserLoginPage() {
     (t) => user!.permissions?.includes(t)
   );
 
-  // 🆕 เก็บ mapping form → department
   const formOption: Option = { check: {}, approve: {}, all: {} };
 
+  // build formOption
   if (user.permissions) {
     if (user.permissions.includes("Check_TAB")) {
       user.permissions
         .filter((p) => p.startsWith("Check_F"))
         .forEach((p) => {
           const parts = p.split("_");
-          const form = parts.slice(1, -1).join("_"); // FM_IT_03
-          const dep = parts[parts.length - 1]; // IT, QA
-
+          const form = parts.slice(1, -1).join("_");
+          const dep = parts[parts.length - 1];
           if (!formOption.check[form]) formOption.check[form] = [];
           formOption.check[form].push(dep);
         });
-      // unique dep
       for (const f in formOption.check) {
         formOption.check[f] = Array.from(new Set(formOption.check[f]));
       }
@@ -69,7 +72,6 @@ export default async function UserLoginPage() {
           const parts = p.split("_");
           const form = parts.slice(1, -1).join("_");
           const dep = parts[parts.length - 1];
-
           if (!formOption.approve[form]) formOption.approve[form] = [];
           formOption.approve[form].push(dep);
         });
@@ -88,37 +90,17 @@ export default async function UserLoginPage() {
       for (const f in formOption.all) {
         formOption.all[f] = Array.from(new Set(formOption.all[f]));
       }
-
-      // user.permissions
-      //   .filter((p) => p.startsWith("Check_F") || p.startsWith("Approve_F"))
-      //   .forEach((p) => {
-      //     const parts = p.split("_");
-      //     const form = parts.slice(1, -1).join("_");
-      //     const dep = parts[parts.length - 1];
-
-      //     if (!formOption.all[form]) formOption.all[form] = [];
-      //     formOption.all[form].push(dep);
-      //   });
-      // for (const f in formOption.all) {
-      //   formOption.all[f] = Array.from(new Set(formOption.all[f]));
-      // }
     }
   }
 
-  // console.log("Form Options:", formOption);
-
-  // console.log("Form Options:", formOption);
-  // Mapping tab → key ของ formOption/DepOption
   const tabKeyMap: Record<Tab, keyof Option> = {
     Check_TAB: "check",
     Approve_TAB: "approve",
     All_TAB: "all",
   };
 
-  // ได้ key แบบ dynamic
   const key = tabKeyMap[availableTabs[0]];
 
-  // initial data
   const initialData = await getDApproveData({
     offset: 0,
     limit: 13,
@@ -128,33 +110,32 @@ export default async function UserLoginPage() {
     FormDep: formOption[key] || {},
   });
 
+  const tabFormMap = {
+    check: formOption.check,
+    approve: formOption.approve,
+    all: formOption.all,
+  };
 
+  console.log(tabFormMap)
 
-  const formaccess = Object.keys(formOption[key]); // ทั้งหมด
-  const FormDep: Record<string, string[]> = {};//create empty object
-  //loop push dep to FormDep
-  availableTabs.forEach(tab => {
-    //key ของ formOption
-    const key = tabKeyMap[tab];
-    //loop formOption[key] เพื่อเอา dep ไปใส่ใน FormDep, key = available tab จะได้ 
-    Object.keys(formOption[key]).forEach(f => {
-      //check ถ้าไม่มี key นี้ใน FormDep ให้สร้าง array เปล่า
-      if (!FormDep[f]) FormDep[f] = [];
-      FormDep[f] = Array.from(new Set([...FormDep[f], ...formOption[key][f]]));
-    });
-  });
-  // console.log("FormDep", FormDep);
-  const data = await GetupdateStatus(formaccess, FormDep);
+  // เรียกใช้งาน GetupdateStatus แล้วรวมผลเป็น object เดียว
+  const statusData = await GetupdateStatus(tabFormMap);
+  console.log('sta',statusData)
+  const AmountData: AmountData = {
+    CheckNull: statusData.check?.CheckNull || 0,
+    ApproveNull: statusData.approve?.ApproveNull || 0,
+    somethingNull: statusData.all?.somethingNull || 0,
+  };
 
   return (
     <DApproveTable
       initialData={initialData}
       user={user}
-      AmountData={data}
+      AmountData={AmountData} // ส่ง object เดียว
       formOption={formOption}
       formkey={key}
-      formaccess={formaccess}
-      FormDep={FormDep}
+      formaccess={Object.keys(formOption[key])}
+      tabFormMap={tabFormMap}
     />
   );
 }

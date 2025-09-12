@@ -8,7 +8,7 @@ import Manager from "./BT_ManagerPage";
 interface ApproveData {
     totalAll: number;
     totals: Record<string, number>; // เพิ่มตรงนี้
-    data: { id: number; FormThai: string; Dep: string; name: string; source: string; date?: string; DateRequest?: string; DateCheck: string; DateApprove?: string }[];
+    data: { id: number; FormThai: string; Dep: string; name: string; source: string; date?: string; DateRequest?: string; DateCheck: string; NameRequest: string; DateApprove?: string }[];
     error?: string;
 }
 
@@ -31,14 +31,17 @@ interface UserPayload {
 interface AmountData {
     ApproveNull: number, CheckNull: number, somethingNull: number
 }
+
+
+
 interface DApproveTableProps {
     user: UserPayload;
     initialData: ApproveData;
-    AmountData: AmountData;
+    AmountData: AmountData; // เปลี่ยนตรงนี้
     formOption?: FormOption;
     formkey: FormOptionKey;
     formaccess: string[];
-    FormDep: Record<string, string[]>;
+    tabFormMap: {};
 }
 
 interface FormOption {
@@ -64,7 +67,7 @@ const tabToKeyMap: Record<Tab, FormOptionKey> = {
 
 type Tab = "Check_TAB" | "Approve_TAB" | "All_TAB";
 
-export default function DApproveTable({ user, initialData, AmountData, formOption, formkey, formaccess, FormDep }: DApproveTableProps) {
+export default function DApproveTable({ user, initialData, AmountData, formOption, formkey, formaccess, tabFormMap }: DApproveTableProps) {
     // form options จาก formOption[key] เช่น formOption.all
     const [selectedForm, setSelectedForm] = useState<string>(""); // Form ที่เลือก
     const [selectedDep, setSelectedDep] = useState<string>(""); // Dep ที่เลือก
@@ -83,7 +86,9 @@ export default function DApproveTable({ user, initialData, AmountData, formOptio
 
     const [loading, setLoading] = useState(false);
     const [approveData, setApproveData] = useState<ApproveData>(initialData);
+    console.log("csr", AmountData)
     const [dataAmount, setDataAmount] = useState<AmountData>(AmountData);
+    console.log("dataamo", dataAmount)
     const availableTabs = (["Check_TAB", "Approve_TAB", "All_TAB"] as Tab[]).filter(t =>
         user.permissions?.includes(t)
     );
@@ -220,8 +225,10 @@ export default function DApproveTable({ user, initialData, AmountData, formOptio
 
             const payload = {
                 formaccess,
-                FormDep: FormDep
+                FormDep: tabFormMap,   // ✅ ต้องส่งเป็น FormDep
             };
+
+            console.log('payload', payload)
 
             const res = await fetch("/api/update-status", {
                 method: "POST",
@@ -231,9 +238,13 @@ export default function DApproveTable({ user, initialData, AmountData, formOptio
             });
 
             if (res.ok) {
-                const data: AmountData = await res.json();
-                // console.log("🟢 refreshAmount result:", data);
-                setDataAmount(data);
+                const statusData = await res.json(); // ✅ TabFormAmount
+                const AmountData: AmountData = {
+                    CheckNull: statusData.check?.CheckNull || 0,
+                    ApproveNull: statusData.approve?.ApproveNull || 0,
+                    somethingNull: statusData.all?.somethingNull || 0,
+                };
+                setDataAmount(AmountData);
             }
         } catch (err) {
             console.error(err);
@@ -360,7 +371,7 @@ export default function DApproveTable({ user, initialData, AmountData, formOptio
             </div>
 
             <h2 className="flex justify-center items-center text-6xl font-light mb-5 text-blue-900 mt-4 font-kanit ">
-                ระบบยืนยันเอกสาร
+                ระบบอนุมัติอิเล็กทรอนิกส์
             </h2>
 
             {/* Tabs */}
@@ -370,25 +381,34 @@ export default function DApproveTable({ user, initialData, AmountData, formOptio
                         key={t}
                         onClick={() => handleTabChange(t)}
                         className={`relative flex items-center px-5 py-2 font-medium transition-colors duration-200
-          ${user.permissions?.includes(t) ? "" : "hidden"}
-          ${tab === t ? "border-blue-600 bg-blue-900 text-white rounded-t-2xl" : " bg-blue-100 rounded-t-2xl border-blue-900 border-t-1 border-r-1 border-l-1"}
-        `}
+        ${user.permissions?.includes(t) ? "" : "hidden"}
+        ${tab === t
+                                ? "border-blue-600 bg-blue-900 text-white rounded-t-2xl"
+                                : "bg-blue-100 rounded-t-2xl border-blue-900 border-t-1 border-r-1 border-l-1"
+                            }
+      `}
                     >
                         {tabLabels[t]}
-                        {/* Badge */}
+
                         {t === "Check_TAB" && dataAmount.CheckNull > 0 && (
-                            <div className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 px-1 rounded-full bg-amber-400 text-xs text-white flex items-center justify-center z-49">
+                            <div className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500 text-xs font-bold text-white shadow-md">
                                 {dataAmount.CheckNull}
                             </div>
                         )}
                         {t === "Approve_TAB" && dataAmount.ApproveNull > 0 && (
-                            <div className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 px-1 rounded-full bg-amber-400 text-xs text-white flex items-center justify-center z-49">
+                            <div className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500 text-xs font-bold text-white shadow-md">
                                 {dataAmount.ApproveNull}
+                            </div>
+                        )}
+                        {t === "All_TAB" && dataAmount.somethingNull > 0 && (
+                            <div className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500 text-xs font-bold text-white shadow-md">
+                                {dataAmount.somethingNull}
                             </div>
                         )}
                     </button>
                 ))}
             </div>
+
 
             <div
                 className={user.permissions?.includes(tab) ? "" : "hidden"}
@@ -519,11 +539,12 @@ export default function DApproveTable({ user, initialData, AmountData, formOptio
                                         />
                                     </th>
                                 )}
-                                <th className="px-4 py-2 text-left w-[10%]">No</th>
+                                <th className="px-4 py-2 text-left w-[5%]">No</th>
                                 <th className="px-4 py-2 text-left w-[25%]">ชื่อเอกสาร</th>
                                 <th className="px-4 py-2 text-left w-[15%]">หมายเลขเอกสาร</th>
                                 <th className="px-4 py-2 text-left w-[15%]">แผนก</th>
                                 <th className="px-4 py-2 text-left w-[15%]">วันที่ร้องขอ</th>
+                                <th className="px-4 py-2 text-left w-[15%]">ชื่อผู้ยื่นขอ</th>
                                 {tab === "Approve_TAB" && <th className="px-4 py-2 text-center w-[15%]">วันที่เช็ค</th>}
                                 {tab === "All_TAB" && <th className="px-4 py-2 text-center w-[15%]">วันที่อนุมัติ</th>}
 
@@ -566,11 +587,12 @@ export default function DApproveTable({ user, initialData, AmountData, formOptio
                                                 />
                                             </td>
                                         )}
-                                        <td className="px-4 py-2 text-left border-t border-gray-200 w-[10%]">{offset + 1 + index}</td>
-                                        <td className="px-4 py-2 text-left border-t border-gray-200 w-[25%]">{doc.FormThai}</td>
-                                        <td className="px-4 py-2 text-left border-t border-gray-200 w-[15%]">{doc.source}</td>
-                                        <td className="px-4 py-2 text-left border-t border-gray-200 w-[15%]">{doc.Dep}</td>
-                                        <td className="px-4 py-2 text-left border-t border-gray-200 w-[15%]">{doc.DateRequest ? new Date(doc.DateRequest).toLocaleDateString() : "-"}</td>
+                                        <td className="px-4 py-2 ps-5 text-left border-t border-gray-200 ">{offset + 1 + index}</td>
+                                        <td className="px-4 py-2 text-left border-t border-gray-200 ">{doc.FormThai}</td>
+                                        <td className="px-4 py-2 text-left border-t border-gray-200 ">{doc.source}</td>
+                                        <td className="px-4 py-2 text-left border-t border-gray-200 ">{doc.Dep}</td>
+                                        <td className="px-4 py-2 text-left border-t border-gray-200 ">{doc.DateRequest ? new Date(doc.DateRequest).toLocaleDateString() : "-"}</td>
+                                        <td className="px-4 py-2 text-left border-t border-gray-200 ">{doc.NameRequest}</td>
                                         {tab === "Approve_TAB" && <td className="px-4 py-2 text-left border-t border-gray-200 w-[15%]">{doc.DateCheck ? new Date(doc.DateCheck).toLocaleDateString() : "-"}</td>}
                                         {tab === "All_TAB" && <td className="px-4 py-2 text-center border-t border-gray-200 w-[15%]">{doc.DateApprove ? new Date(doc.DateApprove).toLocaleDateString() : "-"}</td>}
                                     </tr>

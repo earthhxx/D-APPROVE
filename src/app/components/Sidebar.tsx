@@ -42,6 +42,9 @@ export default function Sidebar() {
 
   if (!mounted) return null;
 
+  console.log("user", user);
+  console.log("permission:", permission);
+
   return (
     <>
       {!open && user && (
