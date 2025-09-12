@@ -99,7 +99,7 @@ export default function Sidebar() {
                   หน้าหลัก
                 </Link>
 
-                {roles?.includes("admin") && (
+                {roles?.includes("Admin") && (
                   <Link
                     href="/pages/admin"
                     onClick={() => setOpen(false)}
