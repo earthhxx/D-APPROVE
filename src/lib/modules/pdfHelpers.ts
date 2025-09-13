@@ -34,7 +34,7 @@ const tableFieldMap: Record<string, Record<string, FieldMapping>> = {
         // StatusApprove: { x: 150, y: 570, size: 14, font: "check" },
         NameApprove: { x: 420, y: 430, size: 11, font: "thai" },
         // DateAppove: { x: 150, y: 570, size: 14, font: "date", font: "thai" },
-        
+
     },
     FM_GA_04: {
         id: { x: 653, y: 503, size: 15, font: "thai" },
@@ -110,6 +110,67 @@ const tableFieldMap: Record<string, Record<string, FieldMapping>> = {
         Date2: { x: 130, y: 130, size: 15, format: "date", font: "thai" },
         Date3: { x: 370, y: 130, size: 15, format: "date", font: "thai" },
     },
+    FM_HR_07: {
+        // Personal Info
+        NameThi: { x: 150, y: 395, size: 15, font: "thai" },
+        Dep: { x: 470, y: 395, size: 15, font: "thai" },
+        EmployeeID: { x: 640, y: 395, size: 15, font: "thai" },
+
+        NameEng: { x: 150, y: 375, size: 15, font: "thai" },
+        Dep_Eng: { x: 470, y: 375, size: 15, font: "thai" },
+        EmployeeID_Eng: { x: 640, y: 375, size: 15, font: "thai" },
+
+        // OT Table 1
+        No1: { x: 93, y: 310, size: 15, font: "thai" },
+        Date1: { x: 127, y: 310, size: 15, font: "thai", format: "date" },
+        StartTime1: { x: 225, y: 310, size: 15, font: "thai" },
+        EndTime1: { x: 300, y: 310, size: 15, font: "thai" },
+        OT150_1: { x: 370, y: 310, size: 15, font: "thai" },
+        OT200_1: { x: 420, y: 310, size: 15, font: "thai" },
+        OT300_1: { x: 470, y: 310, size: 15, font: "thai" },
+        AA1: { x: 512, y: 307, size: 15, font: "check" },
+        BB1: { x: 563, y: 307, size: 15, font: "check" },
+        CC1: { x: 615, y: 307, size: 15, font: "check" },
+        Day1: { x: 665, y: 307, size: 15, font: "check" },
+
+        // OT Table 2
+        No2: { x: 93, y: 287, size: 15, font: "thai" },
+        Date2: { x: 127, y: 287, size: 15, font: "thai", format: "date" },
+        StartTime2: { x: 225, y: 287, size: 15, font: "thai" },
+        EndTime2: { x: 300, y: 287, size: 15, font: "thai" },
+        OT150_2: { x: 370, y: 287, size: 15, font: "thai" },
+        OT200_2: { x: 420, y: 287, size: 15, font: "thai" },
+        OT300_2: { x: 470, y: 287, size: 15, font: "thai" },
+        AA2: { x: 512, y: 287, size: 15, font: "check" },
+        BB2: { x: 563, y: 287, size: 15, font: "check" },
+        CC2: { x: 615, y: 287, size: 15, font: "check" },
+        Day2: { x: 665, y: 287, size: 15, font: "check" },
+
+        // Checkboxes
+        Forget: { x: 152, y: 249, size: 15, font: "check" },
+        Record: { x: 282, y: 249, size: 15, font: "check" },
+        Offsite: { x: 409, y: 249, size: 15, font: "check" },
+        Other: { x: 535, y: 249, size: 15, font: "check" },
+        Other_Detail: { x: 580, y: 249, size: 15, font: "thai" },
+
+        // Request & Approve
+        NameRequest: { x: 180, y: 205, size: 15, font: "thai" },
+        Date3: { x: 360, y: 205, size: 15, font: "thai", format: "date" },
+        SupRequest: { x: 560, y: 205, size: 15, font: "thai" },
+
+        NameRequest2: { x: 180, y: 178, size: 15, font: "thai" },
+        Date4: { x: 360, y: 178, size: 15, font: "thai", format: "date" },
+        SupRequest2: { x: 560, y: 178, size: 15, font: "thai" },
+
+        NameCheck: { x: 180, y: 150, size: 15, font: "thai" },
+        Date5: { x: 360, y: 150, size: 15, font: "thai", format: "date" },
+
+        NameCheck2: { x: 180, y: 122, size: 15, font: "thai" },
+        Date6: { x: 360, y: 122, size: 15, font: "thai", format: "date" },
+
+        NameApprove: { x: 560, y: 150, size: 15, font: "thai" },
+        NameApprove2: { x: 560, y: 122, size: 15, font: "thai" },
+    },
     // เพิ่ม table ใหม่ ๆ ที่นี่ได้เลย
 };
 
@@ -142,6 +203,16 @@ export async function mapFieldsToPDF(
         TitleCompany3: "__",
         Back: "✓",
         NoBack: "✓",
+        AA1: "✓",
+        BB1: "✓",
+        CC1: "✓",
+        AA2: "✓",
+        BB2: "✓",
+        CC2: "✓",
+        Forget: "✓",
+        Record: "✓",
+        Offsite: "✓",
+        Day2: "✓",
     };
 
     for (const key in fieldMap) {
