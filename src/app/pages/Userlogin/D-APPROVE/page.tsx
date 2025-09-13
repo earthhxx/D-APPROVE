@@ -35,7 +35,7 @@ export default async function UserLoginPage() {
       if (typeof decoded === "object" && decoded !== null) {
         user = decoded as UserPayload;
       }
-    } catch {}
+    } catch { }
   }
 
   if (!user || !user.permissions?.includes("D_Approve")) {
@@ -101,12 +101,20 @@ export default async function UserLoginPage() {
 
   const key = tabKeyMap[availableTabs[0]];
 
+  const forms = key === "all"
+    ? user.formaccess ?? []
+    : formOption?.[key]
+      ? Object.keys(formOption[key])
+      : [];
+
+  // console.log('form', forms)
+
   const initialData = await getDApproveData({
     offset: 0,
     limit: 13,
     search: "",
     statusType: availableTabs[0],
-    formaccess: user.formaccess || [],
+    formaccess: forms || [],
     FormDep: formOption[key] || {},
   });
 
@@ -120,7 +128,7 @@ export default async function UserLoginPage() {
 
   // เรียกใช้งาน GetupdateStatus แล้วรวมผลเป็น object เดียว
   const statusData = await GetupdateStatus(tabFormMap);
-  console.log('sta',statusData)
+  console.log('sta', statusData)
   const AmountData: AmountData = {
     CheckNull: statusData.check?.CheckNull || 0,
     ApproveNull: statusData.approve?.ApproveNull || 0,
