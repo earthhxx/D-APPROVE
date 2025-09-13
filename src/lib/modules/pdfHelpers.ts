@@ -1,16 +1,22 @@
 import { PDFPage, PDFFont, rgb } from "pdf-lib";
 import { PDFData } from "@/app/api/generate-filled-pdf/route";
 
-interface FieldMapping {
+// type สำหรับ field เดี่ยว
+type FieldMapping = {
     x: number;
     y: number;
     size?: number;
-    font?: "thai" | "check"; // บอกว่า field นี้ใช้ font ไหน
-    format?: "date" | "text" | "time";
-}
+    font: string;
+    format?: string;
+    source?: string;
+};
+
+// type สำหรับ table mapping (สามารถเก็บ field เดี่ยวหรือ array ของ field)
+type TableFieldMap = Record<string, Record<string, FieldMapping | FieldMapping[]>>;
+
 
 // ตัวอย่าง mapping ของแต่ละ table
-const tableFieldMap: Record<string, Record<string, FieldMapping>> = {
+const tableFieldMap: TableFieldMap = {
     FM_IT_03: {
         id: { x: 500, y: 682, size: 14, font: "thai" },
         // FormID: { x: 500, y: 750, size: 14, font: "thai" },
@@ -122,9 +128,9 @@ const tableFieldMap: Record<string, Record<string, FieldMapping>> = {
 
         // OT Table 1
         No1: { x: 93, y: 310, size: 15, font: "thai" },
-        Date1: { x: 127, y: 310, size: 15, font: "thai", format: "date" },
-        StartTime1: { x: 225, y: 310, size: 15, font: "thai" },
-        EndTime1: { x: 300, y: 310, size: 15, font: "thai" },
+        Date: { x: 127, y: 310, size: 15, font: "thai", format: "date" },
+        TimeIN1: { x: 225, y: 310, size: 15, font: "thai", format: "time" },
+        TimeOut1: { x: 300, y: 310, size: 15, font: "thai", format: "time" },
         OT150_1: { x: 370, y: 310, size: 15, font: "thai" },
         OT200_1: { x: 420, y: 310, size: 15, font: "thai" },
         OT300_1: { x: 470, y: 310, size: 15, font: "thai" },
@@ -136,8 +142,8 @@ const tableFieldMap: Record<string, Record<string, FieldMapping>> = {
         // OT Table 2
         No2: { x: 93, y: 287, size: 15, font: "thai" },
         Date2: { x: 127, y: 287, size: 15, font: "thai", format: "date" },
-        StartTime2: { x: 225, y: 287, size: 15, font: "thai" },
-        EndTime2: { x: 300, y: 287, size: 15, font: "thai" },
+        TimeIN2: { x: 225, y: 287, size: 15, font: "thai", format: "time" },
+        TimeOut2: { x: 300, y: 287, size: 15, font: "thai", format: "time" },
         OT150_2: { x: 370, y: 287, size: 15, font: "thai" },
         OT200_2: { x: 420, y: 287, size: 15, font: "thai" },
         OT300_2: { x: 470, y: 287, size: 15, font: "thai" },
@@ -155,21 +161,26 @@ const tableFieldMap: Record<string, Record<string, FieldMapping>> = {
 
         // Request & Approve
         NameRequest: { x: 180, y: 205, size: 15, font: "thai" },
-        Date3: { x: 360, y: 205, size: 15, font: "thai", format: "date" },
+        DateRequest: { x: 360, y: 205, size: 15, font: "thai", format: "date" },
         SupRequest: { x: 560, y: 205, size: 15, font: "thai" },
 
         NameRequest2: { x: 180, y: 178, size: 15, font: "thai" },
-        Date4: { x: 360, y: 178, size: 15, font: "thai", format: "date" },
+        DateRequest2: { x: 360, y: 178, size: 15, font: "thai", format: "date" },
         SupRequest2: { x: 560, y: 178, size: 15, font: "thai" },
 
-        NameCheck: { x: 180, y: 150, size: 15, font: "thai" },
-        Date5: { x: 360, y: 150, size: 15, font: "thai", format: "date" },
 
-        NameCheck2: { x: 180, y: 122, size: 15, font: "thai" },
-        Date6: { x: 360, y: 122, size: 15, font: "thai", format: "date" },
-
-        NameApprove: { x: 560, y: 150, size: 15, font: "thai" },
-        NameApprove2: { x: 560, y: 122, size: 15, font: "thai" },
+        NameCheck: [
+            { x: 180, y: 150, size: 15, font: "thai" },
+            { x: 180, y: 122, size: 15, font: "thai" },
+        ],
+        DateCheck: [
+            { x: 360, y: 150, size: 15, font: "thai", format: "date" },
+            { x: 360, y: 122, size: 15, font: "thai", format: "date" },
+        ],
+        NameApprove: [
+            { x: 560, y: 150, size: 15, font: "thai" },
+            { x: 560, y: 122, size: 15, font: "thai" },
+        ],
     },
     // เพิ่ม table ใหม่ ๆ ที่นี่ได้เลย
 };
@@ -212,43 +223,49 @@ export async function mapFieldsToPDF(
         Forget: "✓",
         Record: "✓",
         Offsite: "✓",
+        Day1: "✓",
         Day2: "✓",
     };
 
+    // loop key ของ fieldMap
     for (const key in fieldMap) {
-        const { x, y, size = 12, format, font } = fieldMap[key];
-        let text = data[key] ?? "";
-        // console.log("data[key]", data)
+        const fields = Array.isArray(fieldMap[key]) ? fieldMap[key] : [fieldMap[key]];
 
-        if (format === "date" && data[key]) {
-            const date = new Date(data[key]);
-            text = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+        for (const field of fields) {
+            const { x, y, size = 12, format, font, source } = field;
+            const dataKey = source ?? key;
+            let text = data[dataKey] ?? "";
+
+            // date/time format
+            if (format === "date" && data[dataKey]) {
+                const date = new Date(data[dataKey]);
+                text = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+            }
+
+            if (format === "time" && data[dataKey]) {
+                const date = new Date(data[dataKey]);
+                const hh = String(date.getHours()).padStart(2, "0");
+                const mm = String(date.getMinutes()).padStart(2, "0");
+                text = `${hh}:${mm}`;
+            }
+
+            // checkbox
+            if ((data[dataKey] === 1 || data[dataKey] === "1") && font === "check") {
+                text = markFields[key] || "";
+            }
+            if ((data[dataKey] === 0 || data[dataKey] === "0") && font === "check") {
+                text = "";
+            }
+
+            page.drawText(text.toString(), {
+                x,
+                y,
+                size,
+                font: font === "check" ? fontcheck : fontthai,
+                color: rgb(0, 0, 0.7),
+            });
         }
-
-        if (format === "time" && data[key]) {
-            const date = new Date(data[key]);
-            const hours = date.getHours().toString().padStart(2, "0");
-            const minutes = date.getMinutes().toString().padStart(2, "0");
-            text = `${hours}:${minutes}`;
-        }
-
-
-        // ถ้าเป็น field ที่ต้องตี๊กถูก/ขีด
-        // Checkbox logic
-        if ((data[key] === 1 || data[key] === "1")) {
-            text = markFields[key] || "";
-        }
-
-        if ((data[key] === 0 || data[key] === "0")) {
-            text = "";
-        }
-
-        page.drawText(text.toString(), {
-            x,
-            y,
-            size,
-            font: font === "check" ? fontcheck : fontthai,
-            color: rgb(0, 0, 0.7),
-        });
     }
+
+
 }
