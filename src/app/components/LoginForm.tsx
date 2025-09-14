@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { User } from "./Sidebar";
+import { useAuth } from "../context/AuthContext";
 
 type Props = {
   onLoginSuccess: (loggedUser: User) => void;
@@ -9,6 +10,8 @@ type Props = {
 export default function LoginForm({ onLoginSuccess }: Props) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const { login } = useAuth(); // ใช้ context แทน props
+
 
   const clearForm = () => {
     setUsername("");
@@ -19,22 +22,46 @@ export default function LoginForm({ onLoginSuccess }: Props) {
     e.preventDefault();
 
     try {
-      const res = await fetch("/api/Login", {
+      const res = await fetch("http://localhost:5284/api/main/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
+        credentials: "include"
       });
-
+      if (!res.ok) {
+        const errorText = await res.text(); // ถ้า JSON fail → อ่านเป็น text
+        alert(errorText);
+        console.log(errorText)
+        return;
+      }
       const data = await res.json();
+
+
 
       if (res.ok) {
         clearForm();
-        onLoginSuccess({
-          userId: data.User_Id,
-          fullName: data.fullName,
-          roles: data.roles,
-          permissions: data.permissions,
+        //next api
+        // onLoginSuccess({
+        //   userId: data.User_Id,
+        //   fullName: data.fullName,
+        //   roles: data.roles,
+        //   permissions: data.permissions,
+        // });
+
+        console.log(data)
+
+        //.net api
+        login({
+          userId: data.user_Id.toString(),    // User_Id มีจริง U ตัวเล็กไอสัส
+          fullName: data.fullName,            // ใช้ fullName ตัวเล็ก
+          roles: Array.isArray(data.roles) ? data.roles : (data.roles || "").split(","),
+          permissions: Array.isArray(data.permissions) ? data.permissions : (data.permissions || "").split(",")
         });
+
+
+
+
+
       } else {
         alert(data.error || "Login ล้มเหลว ❌");
         clearForm();

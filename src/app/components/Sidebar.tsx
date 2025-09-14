@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link"; // ✅ ใช้ Link
 import { useAuth } from "../context/AuthContext";
 
+
 export interface User {
   userId: string;
   fullName: string;
@@ -12,13 +13,15 @@ export interface User {
   permissions: string[];
 }
 
+
 export default function Sidebar() {
   const { user, login, logout, open, setOpen } = useAuth();
   const [mounted, setMounted] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setMounted(true), []);
 
+  useEffect(() => setMounted(true), []);
+  console.log('user auth',user)
   const roles = user?.roles || [];
   const permission = user?.permissions || [];
   const userId = user?.userId || "";

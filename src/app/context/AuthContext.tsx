@@ -29,6 +29,7 @@ export const AuthProvider = ({
   const router = useRouter();
 
   const login = (newUser: User) => {
+    console.log(newUser)
     setUser(newUser);
     // cookie ต้องถูกเซ็ตแล้วจาก API Login
   };

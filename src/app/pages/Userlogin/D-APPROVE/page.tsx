@@ -5,6 +5,8 @@ import type { UserPayload } from "@/app/types/types";
 import { getDApproveData } from "@/lib/modules/DApproveModule";
 import { GetupdateStatus } from "@/lib/modules/GetupdateStatus";
 
+const JWT_SECRET = process.env.JWT_SECRET!; // ต้องมีค่า
+
 type Tab = "Check_TAB" | "Approve_TAB" | "All_TAB";
 
 // map form → dep
@@ -31,12 +33,39 @@ export default async function UserLoginPage() {
   let user: UserPayload | null = null;
   if (token) {
     try {
-      const decoded = jwt.decode(token);
-      if (typeof decoded === "object" && decoded !== null) {
-        user = decoded as UserPayload;
-      }
-    } catch { }
+      const payload = jwt.verify(token, JWT_SECRET) as any;
+
+      user = {
+        userId: payload.userId,
+        fullName: payload.fullName,
+        roles: Array.isArray(payload.roles)
+          ? payload.roles
+          : typeof payload.roles === "string"
+            ? payload.roles.split(",")
+            : [],
+        permissions: Array.isArray(payload.permissions)
+          ? payload.permissions
+          : typeof payload.permissions === "string"
+            ? payload.permissions.split(",")
+            : [],
+        formaccess: Array.isArray(payload.formaccess)
+          ? payload.formaccess
+          : typeof payload.formaccess === "string"
+            ? payload.formaccess.split(",")
+            : [],
+        Dep: Array.isArray(payload.Dep)
+          ? payload.Dep
+          : typeof payload.Dep === "string"
+            ? payload.Dep.split(",")
+            : [],
+      };
+
+    } catch (err) {
+      console.error("JWT verification failed:", err);
+      return <div>Access Denied</div>;
+    }
   }
+
 
   if (!user || !user.permissions?.includes("D_Approve")) {
     return <div>Access Denied</div>;

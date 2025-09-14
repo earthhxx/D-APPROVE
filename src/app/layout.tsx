@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Sidebar from "./components/Sidebar";
-import { Geist, Geist_Mono , Kanit } from "next/font/google";
+import { Geist, Geist_Mono, Kanit } from "next/font/google";
 import { cookies } from "next/headers"; // สำหรับ SSR cookie
 import { jwtVerify } from "jose";
 import "./globals.css";
@@ -44,17 +44,29 @@ export default async function RootLayout({
     try {
       const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
       const { payload } = await jwtVerify(token, secret);
+      //ของ next api
+      // initialUser = {
+      //   userId: payload.userId as string,
+      //   fullName: payload.fullName as string,
+      //   roles: Array.isArray(payload.roles)
+      //     ? payload.roles
+      //     : [payload.roles as string],
+      //   permissions: Array.isArray(payload.permissions)
+      //     ? payload.permissions
+      //     : [payload.permissions as string],
+      // };
 
       initialUser = {
         userId: payload.userId as string,
         fullName: payload.fullName as string,
-        roles: Array.isArray(payload.roles)
-          ? payload.roles
-          : [payload.roles as string],
-        permissions: Array.isArray(payload.permissions)
-          ? payload.permissions
-          : [payload.permissions as string],
+        roles: typeof (payload as any).roles === "string"
+          ? ((payload as any).roles as string).split(",")
+          : ((payload as any).roles as string[]),
+        permissions: typeof (payload as any).permissions === "string"
+          ? ((payload as any).permissions as string).split(",")
+          : ((payload as any).permissions as string[])
       };
+      console.log(initialUser)
     } catch {
       initialUser = null;
     }
